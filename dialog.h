@@ -35,6 +35,8 @@ private:
     void mouseRightClick(int x,int y);
     void autoAction();
     void delay(qint64 second);
+    void startApp();
+    void killApp();
 
 protected:
     void keyReleaseEvent(QKeyEvent *event);
@@ -61,7 +63,7 @@ private:
     QProcess *m_process;
     QTimer *m_timer;
     bool m_app_running;
-    bool m_timer_setting;
+    bool m_timer_stop;
 };
 
 

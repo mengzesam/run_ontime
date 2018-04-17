@@ -11,7 +11,7 @@ Dialog::Dialog(QWidget *parent) :
     m_process(new QProcess),
     m_timer(new QTimer),
     m_app_running(false),
-    m_timer_setting(false)
+    m_timer_stop(true)
 {
     m_ui->setupUi(this);
     for(int i=0;i<K_CLICKNUMBER;i++){
@@ -20,6 +20,8 @@ Dialog::Dialog(QWidget *parent) :
     }
     m_clickXs[0]=1180;
     m_clickYs[0]=45;
+    m_clickXs[1]=580;
+    m_clickYs[1]=155;
     connect(m_process,&QProcess::stateChanged,this,&Dialog::processStateChanged);
     m_timer->setParent(this);
     connect(m_timer,&QTimer::timeout,this,&Dialog::on_Timer);
@@ -34,34 +36,29 @@ Dialog::~Dialog()
 
 void Dialog::on_Timer()
 {
-    m_timer->stop();
-    if(m_app_running)
-        m_process->kill();
-    //delay(1);
-    m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
-                                    +" ontime kill "+m_appname+"\n");
-    QFileInfo fileinfo=QFileInfo(m_appdir+m_appname);
-    if(!fileinfo.isExecutable())
+    if(m_timer_stop)
         return;
-    QDir::setCurrent(m_appdir);
-    m_process->start(m_appname);
+    if(m_app_running)
+        killApp();
+    startApp();
     m_app_running=true;
-    int waiting=m_ui->SpinBox_Waiting->value();
-    //delay(waiting);
-    m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
-                                    +" ontime start "+m_appname+"\n");
     autoAction();
-    m_timer->start();
+    qint64 duration=m_ui->SpinBox_RunTime->value();
+    QTimer::singleShot(duration*1000,this,SLOT(on_Timer()));
 }
 
 void Dialog::processStateChanged(QProcess::ProcessState newState)
 {
     if(newState==QProcess::ProcessState::Running){
         m_app_running=true;
-        qDebug()<<"process state:running";
+        m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
+                                        +" Running "+m_appname+"\n");
     }else if(newState==QProcess::ProcessState::NotRunning){
         m_app_running=false;
-        qDebug()<<"process state:not running";
+        m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
+                                        +"Not Running "+m_appname+"\n");
+    }else{
+        ;
     }
 }
 
@@ -72,38 +69,40 @@ void Dialog::on_Button_SetApp_clicked()
     if(file.isEmpty() || !QFileInfo::exists(file))
          return;
     QFileInfo fileinfo=QFileInfo(file);
-    if(!fileinfo.isExecutable())
-        return;
     m_appname=fileinfo.fileName();
     m_appdir=fileinfo.path()+"/";
-    QDir::setCurrent(m_appdir);
-    m_process->start(m_appname);
+    startApp();
+    m_app_running=true;
+    m_ui->Button_SetApp->setEnabled(false);
+    m_ui->Button_StartTimer->setEnabled(true);
+    m_ui->Button_CleanTimer->setEnabled(false);
+    m_ui->Button_Kill->setEnabled(true);
     setWindowTitle(m_appname+tr("@RunOntime"));
-    m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
-                                    +" run "+m_appname+"\n");
-
+    autoAction();
 }
 
 void Dialog::on_Button_StartTimer_clicked()
 {
     if(!m_app_running){
-        QFileInfo fileinfo=QFileInfo(m_appdir+m_appname);
-        if(!fileinfo.isExecutable())
-            return;
-        QDir::setCurrent(m_appdir);
-        m_process->start(m_appname);
+        startApp();
         m_app_running=true;
     }
-    qint64 runtime=m_ui->SpinBox_RunTime->value();
-    m_timer->setInterval(runtime);
-    m_timer->start();
-    m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
-                                    +" startTimer "+m_appname+"\n");
+    m_timer_stop=false;
+    m_ui->Button_SetApp->setEnabled(false);
+    m_ui->Button_StartTimer->setEnabled(false);
+    m_ui->Button_CleanTimer->setEnabled(true);
+    m_ui->Button_Kill->setEnabled(true);
+    qint64 duration=m_ui->SpinBox_RunTime->value();
+    QTimer::singleShot(duration*1000,this,SLOT(on_Timer()));
 }
 
 void Dialog::on_Button_CleanTimer_clicked()
 {
-    m_timer->stop();
+    m_timer_stop=true;
+    m_ui->Button_SetApp->setEnabled(false);
+    m_ui->Button_StartTimer->setEnabled(true);
+    m_ui->Button_CleanTimer->setEnabled(false);
+    m_ui->Button_Kill->setEnabled(true);
     m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
                                     +" stopTimer "+m_appname+"\n");
 }
@@ -111,10 +110,14 @@ void Dialog::on_Button_CleanTimer_clicked()
 void Dialog::on_Button_Kill_clicked()
 {
     if(m_app_running)
-        m_process->kill();
+        killApp();
+    m_app_running=false;
+    m_timer_stop=true;
+    m_ui->Button_SetApp->setEnabled(true);
+    m_ui->Button_StartTimer->setEnabled(false);
+    m_ui->Button_CleanTimer->setEnabled(false);
+    m_ui->Button_Kill->setEnabled(false);
     setWindowTitle(tr("@RunOntime"));
-    m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
-                                    +" kill "+m_appname+"\n");
 }
 
 void Dialog::on_CheckBox_SetPos_stateChanged(int state)//state:0 unchecked,2 checked
@@ -146,6 +149,7 @@ void Dialog::mouseClick(int x, int y)
     qint64 dy=y*d100/height;
     ::mouse_event(K_MOUSEEVENTF_ABSOLUTE | K_MOUSEEVENTF_LEFTDOWN |K_MOUSEEVENTF_LEFTUP,dx,dy,0,0);
 }
+
 void Dialog::mouseDoubleClick(int x, int y)
 {
     int width=::GetSystemMetrics(SM_CXSCREEN);
@@ -169,7 +173,9 @@ void Dialog::mouseRightClick(int x,int y)
 
 void Dialog::autoAction()
 {
-    qint64 act_interval=m_ui->SpinBox_ClickInterval->value();
+    int act_interval=m_ui->SpinBox_ClickInterval->value();
+    int waiting=m_ui->SpinBox_Waiting->value();
+    delay(waiting);
     for(int i=0;i<K_CLICKNUMBER;i++){
         if( m_actTypes[i]==0){//left click
             mouseMove(m_clickXs[i],m_clickYs[i]);
@@ -205,4 +211,27 @@ void Dialog::keyReleaseEvent(QKeyEvent *event)
 void Dialog::delay(qint64 second)
 {
     ::Sleep(second*1000);
+}
+
+void Dialog::startApp()
+{
+    QFileInfo fileinfo=QFileInfo(m_appdir+m_appname);
+    if(!fileinfo.isExecutable())
+        return;
+    //m_process->start(m_appname);
+    QDir::setCurrent(m_appdir);
+    ::ShellExecuteW(0,QString("open").toStdWString().c_str(),m_appname.toStdWString().c_str(),
+                    QString("").toStdWString().c_str(),m_appdir.toStdWString().c_str(),1);
+    m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
+                                    +" start "+m_appname+"\n");
+
+}
+
+void Dialog::killApp()
+{
+   // ::system(QString("taskkill /F /IM "+m_appname).toStdWString().c_str());
+    ::ShellExecuteW(0,QString("open").toStdWString().c_str(),QString("taskkill").toStdWString().c_str(),
+                    QString(" /F /IM "+m_appname).toStdWString().c_str(),m_appdir.toStdWString().c_str(),0);
+    m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
+                                    +" kill "+m_appname+"\n");
 }
