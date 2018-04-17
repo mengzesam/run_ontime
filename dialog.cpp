@@ -14,24 +14,43 @@ Dialog::Dialog(QWidget *parent) :
     m_timer_stop(true)
 {
     m_ui->setupUi(this);
-    for(int i=0;i<K_CLICKNUMBER;i++){
-        m_ui->ComboBox_ClickNo->addItem(QString("%1").arg(i+1));
-        m_actTypes[i]=1;
-    }
+    m_ui->SpinBox_ActionNumber->setMaximum(K_MAXACTION);
     m_clickXs[0]=1180;
     m_clickYs[0]=45;
     m_clickXs[1]=580;
     m_clickYs[1]=155;
+    int action_number=m_ui->SpinBox_ActionNumber->value();
+    updateActionNumber(action_number);
+    setWindowTitle(tr("@RunOntime"));
     connect(m_process,&QProcess::stateChanged,this,&Dialog::processStateChanged);
     m_timer->setParent(this);
     connect(m_timer,&QTimer::timeout,this,&Dialog::on_Timer);
-    setWindowTitle(tr("@RunOntime"));
 }
 
 Dialog::~Dialog()
 {
+    delete m_timer;
     delete m_process;
     delete m_ui;
+}
+
+void Dialog::on_SpinBox_ActionNumber_valueChanged(int arg1)
+{
+    updateActionNumber(arg1);
+}
+
+void Dialog::updateActionNumber(int action_number)
+{
+    if(action_number>K_MAXACTION ||action_number<1)
+        return;
+    int current_number=m_ui->ComboBox_ClickNo->count();
+    for(int i=current_number;i>action_number;i--){
+        m_ui->ComboBox_ClickNo->removeItem(i-1);
+    }
+    for(int i=current_number;i<action_number;i++){
+        m_ui->ComboBox_ClickNo->addItem(QString("%1").arg(i+1));
+        m_actTypes[i]=1;
+    }
 }
 
 void Dialog::on_Timer()
@@ -40,6 +59,7 @@ void Dialog::on_Timer()
         return;
     if(m_app_running)
         killApp();
+    delay(2);
     startApp();
     m_app_running=true;
     autoAction();
@@ -125,8 +145,10 @@ void Dialog::on_CheckBox_SetPos_stateChanged(int state)//state:0 unchecked,2 che
     if(state==2)//checked
     {
         m_ui->ComboBox_ClickNo->setEnabled(true);
+        m_ui->SpinBox_ActionNumber->setEnabled(true);
     }else{
         m_ui->ComboBox_ClickNo->setEnabled(false);
+        m_ui->SpinBox_ActionNumber->setEnabled(false);
     }
 }
 
@@ -176,7 +198,8 @@ void Dialog::autoAction()
     int act_interval=m_ui->SpinBox_ClickInterval->value();
     int waiting=m_ui->SpinBox_Waiting->value();
     delay(waiting);
-    for(int i=0;i<K_CLICKNUMBER;i++){
+    int action_number=m_ui->ComboBox_ClickNo->count();
+    for(int i=0;i<action_number;i++){
         if( m_actTypes[i]==0){//left click
             mouseMove(m_clickXs[i],m_clickYs[i]);
             mouseClick(m_clickXs[i],m_clickYs[i]);
@@ -187,7 +210,7 @@ void Dialog::autoAction()
             mouseMove(m_clickXs[i],m_clickYs[i]);
             mouseRightClick(m_clickXs[i],m_clickYs[i]);
         }
-        if(i<K_CLICKNUMBER-1)
+        if(i<action_number-1)
             delay(act_interval);
     }
 }
@@ -229,9 +252,9 @@ void Dialog::startApp()
 
 void Dialog::killApp()
 {
-   // ::system(QString("taskkill /F /IM "+m_appname).toStdWString().c_str());
-    ::ShellExecuteW(0,QString("open").toStdWString().c_str(),QString("taskkill").toStdWString().c_str(),
-                    QString(" /F /IM "+m_appname).toStdWString().c_str(),m_appdir.toStdWString().c_str(),0);
+    //::system(QString("taskkill /F /IM "+m_appname).toLatin1());
+   ::ShellExecuteW(0,QString("open").toStdWString().c_str(),QString("taskkill").toStdWString().c_str(),
+                  QString(" /F /IM "+m_appname).toStdWString().c_str(),m_appdir.toStdWString().c_str(),0);
     m_ui->TextEdit_Info->appendHtml((QTime::currentTime()).toString("hh:mm:ss")
                                     +" kill "+m_appname+"\n");
 }

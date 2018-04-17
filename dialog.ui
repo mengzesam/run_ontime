@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>220</width>
-    <height>341</height>
+    <width>226</width>
+    <height>365</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,12 +31,12 @@
     <rect>
      <x>10</x>
      <y>70</y>
-     <width>71</width>
+     <width>121</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Run Time(s)</string>
+    <string>EveryRun Time(s)</string>
    </property>
   </widget>
   <widget class="QSpinBox" name="SpinBox_RunTime">
@@ -93,7 +93,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>One Boot Waiting Time(s)</string>
+    <string>EveryBoot Waiting Time(s)</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -106,7 +106,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Click Interval(s)</string>
+    <string>Action Interval(s)</string>
    </property>
   </widget>
   <widget class="QSpinBox" name="SpinBox_ClickInterval">
@@ -183,13 +183,13 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>160</y>
-     <width>111</width>
+     <y>190</y>
+     <width>121</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>F2 to Set Click</string>
+    <string>F2 to Set Action</string>
    </property>
   </widget>
   <widget class="QComboBox" name="ComboBox_ClickNo">
@@ -198,8 +198,8 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>160</y>
+     <x>130</x>
+     <y>190</y>
      <width>41</width>
      <height>22</height>
     </rect>
@@ -208,8 +208,8 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>160</y>
+     <x>180</x>
+     <y>190</y>
      <width>54</width>
      <height>12</height>
     </rect>
@@ -224,14 +224,52 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>190</y>
+     <x>10</x>
+     <y>220</y>
      <width>211</width>
      <height>141</height>
     </rect>
    </property>
    <property name="readOnly">
     <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>160</y>
+     <width>121</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Action Number</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="SpinBox_ActionNumber">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>160</y>
+     <width>51</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>10</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>2</number>
    </property>
   </widget>
  </widget>

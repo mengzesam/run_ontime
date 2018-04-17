@@ -28,6 +28,8 @@ private slots:
     void on_Timer();
     void processStateChanged(QProcess::ProcessState newState);
 
+    void on_SpinBox_ActionNumber_valueChanged(int arg1);
+
 private:
     void mouseMove(int x,int y);
     void mouseClick(int x,int y);
@@ -37,12 +39,13 @@ private:
     void delay(qint64 second);
     void startApp();
     void killApp();
+    void updateActionNumber(int action_number);
 
 protected:
     void keyReleaseEvent(QKeyEvent *event);
 
 private:
-    const static int K_CLICKNUMBER=2;
+    const static int K_MAXACTION=6;
     const static int K_MOUSEEVENTF_MOVE=0x0001;        //鼠标移动
     const static int K_MOUSEEVENTF_LEFTDOWN=0x0002;	 //鼠标左键按下
     const static int K_MOUSEEVENTF_LEFTUP=0x0004;	     //鼠标左键松开
@@ -55,9 +58,9 @@ private:
 
 private:
     Ui::Dialog *m_ui;
-    int m_clickXs[K_CLICKNUMBER];
-    int m_clickYs[K_CLICKNUMBER];
-    int m_actTypes[K_CLICKNUMBER];//0:left click,1 double click,2 right click
+    int m_clickXs[K_MAXACTION];
+    int m_clickYs[K_MAXACTION];
+    int m_actTypes[K_MAXACTION];//0:left click,1 double click,2 right click
     QString m_appname;
     QString m_appdir;
     QProcess *m_process;
