@@ -25,6 +25,7 @@ Dialog::Dialog(QWidget *parent) :
     connect(m_process,&QProcess::stateChanged,this,&Dialog::processStateChanged);
     m_timer->setParent(this);
     connect(m_timer,&QTimer::timeout,this,&Dialog::on_Timer);
+    setFixedSize(480,540);
 }
 
 Dialog::~Dialog()
@@ -32,6 +33,10 @@ Dialog::~Dialog()
     delete m_timer;
     delete m_process;
     delete m_ui;
+}
+
+void Dialog::resizeEvent(QResizeEvent *){
+    ;
 }
 
 void Dialog::on_SpinBox_ActionNumber_valueChanged(int arg1)

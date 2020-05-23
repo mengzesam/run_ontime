@@ -43,6 +43,7 @@ private:
 
 protected:
     void keyReleaseEvent(QKeyEvent *event);
+    void resizeEvent(QResizeEvent *) override;
 
 private:
     const static int K_MAXACTION=6;
