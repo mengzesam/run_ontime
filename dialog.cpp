@@ -257,6 +257,7 @@ void Dialog::startApp()
 
 void Dialog::killApp()
 {
+    QDir::setCurrent(m_appdir);
     //::system(QString("taskkill /F /IM "+m_appname).toLatin1());
    ::ShellExecuteW(0,QString("open").toStdWString().c_str(),QString("taskkill").toStdWString().c_str(),
                   QString(" /F /IM "+m_appname).toStdWString().c_str(),m_appdir.toStdWString().c_str(),0);
